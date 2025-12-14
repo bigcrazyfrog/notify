@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NotifySystem.Core\NotifySystem.Core.csproj" />
+      <ProjectReference Include="..\NotifySystem.Infrastructure\NotifySystem.Infrastructure.csproj" />
+      <ProjectReference Include="..\NotifySystem.Messaging\NotifySystem.Messaging.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MediatR" Version="13.1.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+      <PackageReference Include="prometheus-net" Version="8.2.1" />
+      <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+    </ItemGroup>
+
+</Project>

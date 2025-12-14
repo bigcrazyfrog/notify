@@ -1,0 +1,101 @@
+pipeline {
+  agent {
+    kubernetes {
+      cloud 'kubernetes'
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      imagePullPolicy: IfNotPresent
+      command: ["/busybox/cat"]
+      tty: true
+      env:
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: dockerhub-creds
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+"""
+    }
+  }
+
+  parameters {
+    choice(name: 'SERVICE', choices: ['gateway', 'email', 'push', 'telegram'], description: 'Какой сервис собирать')
+    string(name: 'TAG', defaultValue: '', description: 'Тег образа (пусто = BUILD_NUMBER)')
+    booleanParam(name: 'PUSH_LATEST', defaultValue: true, description: 'Пушить ли :latest')
+  }
+
+  environment {
+    // Можно оставить пустым, а вычислять через script
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        container('kaniko') { checkout scm }
+      }
+    }
+
+    stage('Resolve service config') {
+      steps {
+        script {
+          // Централизованный маппинг: SERVICE -> (context, dockerfile, image)
+          def cfg = [
+            gateway:  [ context: 'src/NotifySystem.Gateway',  dockerfile: 'src/NotifySystem/NotifySystem.Gateway/Dockerfile',  image: "${env.REGISTRY}/notify-gateway" ],
+            email:    [ context: 'src/NotifySystem.Email',    dockerfile: 'src/NotifySystem/Services/EmailService/EmailService/Dockerfile',    image: "${env.REGISTRY}/notify-email" ],
+            push:     [ context: 'src/NotifySystem.Push',     dockerfile: 'src/NotifySystem/Services/PushService/PushService/Dockerfile',     image: "${env.REGISTRY}/notify-push" ],
+            # TODO telegram
+          ]
+
+          if (!cfg.containsKey(params.SERVICE)) {
+            error("Unknown SERVICE=${params.SERVICE}")
+          }
+
+          env.CONTEXT_DIR = cfg[params.SERVICE].context
+          env.DOCKERFILE  = cfg[params.SERVICE].dockerfile
+          env.IMAGE_NAME  = cfg[params.SERVICE].image
+
+          env.IMAGE_TAG = (params.TAG?.trim()) ? params.TAG.trim() : "${env.BUILD_NUMBER}"
+
+          echo "SERVICE=${params.SERVICE}"
+          echo "CONTEXT_DIR=${env.CONTEXT_DIR}"
+          echo "DOCKERFILE=${env.DOCKERFILE}"
+          echo "IMAGE=${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+        }
+      }
+    }
+
+    stage('Build & Push (Kaniko)') {
+      steps {
+        container('kaniko') {
+          sh '''
+            set -euo pipefail
+
+            DEST1="${IMAGE_NAME}:${IMAGE_TAG}"
+
+            ARGS="--context $(pwd)/${CONTEXT_DIR} \
+                  --dockerfile $(pwd)/${DOCKERFILE} \
+                  --destination ${DEST1}"
+
+            if [ "${PUSH_LATEST}" = "true" ]; then
+              ARGS="$ARGS --destination ${IMAGE_NAME}:latest"
+            fi
+
+            echo "Running kaniko with args: $ARGS"
+            /kaniko/executor $ARGS
+          '''
+        }
+      }
+    }
+  }
+}
