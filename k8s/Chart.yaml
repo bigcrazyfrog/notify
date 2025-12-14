@@ -1,0 +1,11 @@
+apiVersion: v2
+name: notification-ms
+description: Umbrella chart for Kubernetes notification-ms
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: gateway
+    version: 0.1.0
+    repository: "file://gateway"

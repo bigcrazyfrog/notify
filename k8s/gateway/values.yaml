@@ -1,0 +1,33 @@
+replicaCount: 1
+
+image:
+  repository: frogfrog243/notify-gateway
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  host: notification.64v.ru
+  path: /
+  pathType: Prefix
+  tls:
+    enabled: true
+    secretName: notification-64v-ru-tls
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+env: []
+envFrom:
+  secrets: []
+  configMaps: []
