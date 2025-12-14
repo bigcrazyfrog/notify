@@ -30,16 +30,45 @@ spec:
   }
 
   parameters {
-    choice(name: 'SERVICE', choices: ['gateway', 'email', 'push', 'telegram'], description: 'Какой сервис собирать')
-    string(name: 'TAG', defaultValue: '', description: 'Тег образа (пусто = BUILD_NUMBER)')
-    booleanParam(name: 'PUSH_LATEST', defaultValue: true, description: 'Пушить ли :latest')
-  }
+      choice(
+        name: 'SERVICE',
+        choices: ['gateway', 'email', 'push', 'telegram'],
+        description: 'Какой сервис собирать'
+      )
+      string(
+        name: 'TAG',
+        defaultValue: '',
+        description: 'Тег образа (пусто = BUILD_NUMBER)'
+      )
+      booleanParam(
+        name: 'PUSH_LATEST',
+        defaultValue: true,
+        description: 'Пушить ли :latest'
+      )
+    }
 //
 //   environment {
 //     // Можно оставить пустым, а вычислять через script
 //   }
 
   stages {
+    stage('Resolve params') {
+      steps {
+        script {
+          env.IMAGE_TAG = params.TAG?.trim()
+            ? params.TAG.trim()
+            : env.BUILD_NUMBER
+
+          // ВАЖНО: явно прокидываем boolean в env как строку
+          env.PUSH_LATEST = params.PUSH_LATEST ? 'true' : 'false'
+
+          echo "SERVICE=${params.SERVICE}"
+          echo "IMAGE_TAG=${env.IMAGE_TAG}"
+          echo "PUSH_LATEST=${env.PUSH_LATEST}"
+        }
+      }
+    }
+
     stage('Checkout') {
       steps {
         container('kaniko') { checkout scm }
