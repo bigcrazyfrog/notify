@@ -80,9 +80,9 @@ spec:
         script {
           // Централизованный маппинг: SERVICE -> (context, dockerfile, image)
           def cfg = [
-            gateway:  [ context: 'src/NotifySystem.Gateway',  dockerfile: 'src/NotifySystem/NotifySystem.Gateway/Dockerfile',  image: "${env.REGISTRY}/notify-gateway" ],
-            email:    [ context: 'src/NotifySystem.Email',    dockerfile: 'src/NotifySystem/Services/EmailService/EmailService/Dockerfile',    image: "${env.REGISTRY}/notify-email" ],
-            push:     [ context: 'src/NotifySystem.Push',     dockerfile: 'src/NotifySystem/Services/PushService/PushService/Dockerfile',     image: "${env.REGISTRY}/notify-push" ],
+            gateway:  [ context: 'src/NotifySystem',  dockerfile: 'src/NotifySystem/NotifySystem.Gateway/Dockerfile',  image: "${env.REGISTRY}/notify-gateway" ],
+            email:    [ context: 'src/NotifySystem',    dockerfile: 'src/NotifySystem/Services/EmailService/EmailService/Dockerfile',    image: "${env.REGISTRY}/notify-email" ],
+            push:     [ context: 'src/NotifySystem',     dockerfile: 'src/NotifySystem/Services/PushService/PushService/Dockerfile',     image: "${env.REGISTRY}/notify-push" ],
             // TODO telegram
           ]
 
