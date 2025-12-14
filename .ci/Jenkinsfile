@@ -1,0 +1,80 @@
+pipeline {
+  agent {
+    kubernetes {
+      cloud 'kubernetes'
+      yaml readFile('.ci/pipeline/agent-kaniko.yaml')
+    }
+  }
+
+  // В declarative 'parameters' нельзя вызвать load(), поэтому параметры фиксируем здесь
+  // и поддерживаем в одном месте через .ci/pipeline/params.groovy (см. ниже).
+  parameters {
+    choice(name: 'SERVICE', choices: ['gateway', 'email', 'push', 'telegram'], description: 'Какой сервис собирать')
+    string(name: 'TAG', defaultValue: '', description: 'Тег образа (пусто = BUILD_NUMBER)')
+    booleanParam(name: 'PUSH_LATEST', defaultValue: true, description: 'Пушить ли :latest')
+  }
+
+  stages {
+    stage('Load pipeline libs') {
+      steps {
+        script {
+          // Грузим файлы после checkout (но Jenkinsfile уже выполняется),
+          // поэтому используем readFile + evaluate, чтобы не требовать предварительного checkout.
+          paramsCfg   = evaluate(readFile('.ci/pipeline/params.groovy'))
+          servicesCfg = evaluate(readFile('.ci/pipeline/services.groovy'))
+          kanikoLib   = evaluate(readFile('.ci/pipeline/kaniko.groovy'))
+        }
+      }
+    }
+
+    stage('Resolve params') {
+      steps {
+        script {
+          def resolved = paramsCfg.resolveParams(params, env)
+          env.IMAGE_TAG    = resolved.imageTag
+          env.PUSH_LATEST  = resolved.pushLatestStr
+
+          echo "SERVICE=${params.SERVICE}"
+          echo "IMAGE_TAG=${env.IMAGE_TAG}"
+          echo "PUSH_LATEST=${env.PUSH_LATEST}"
+        }
+      }
+    }
+
+    stage('Checkout') {
+      steps {
+        container('kaniko') { checkout scm }
+      }
+    }
+
+    stage('Resolve service config') {
+      steps {
+        script {
+          def cfg = servicesCfg.resolveService(params.SERVICE, env)
+
+          env.CONTEXT_DIR = cfg.context
+          env.DOCKERFILE  = cfg.dockerfile
+          env.IMAGE_NAME  = cfg.image
+
+          // На всякий случай пересчитываем тег (если кто-то поменял params.TAG после resolve)
+          env.IMAGE_TAG = paramsCfg.resolveTag(params, env)
+
+          echo "SERVICE=${params.SERVICE}"
+          echo "CONTEXT_DIR=${env.CONTEXT_DIR}"
+          echo "DOCKERFILE=${env.DOCKERFILE}"
+          echo "IMAGE=${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+        }
+      }
+    }
+
+    stage('Build & Push (Kaniko)') {
+      steps {
+        container('kaniko') {
+          script {
+            kanikoLib.buildAndPush(env)
+          }
+        }
+      }
+    }
+  }
+}
