@@ -15,12 +15,12 @@ ingress:
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-  host: notification.64v.ru
+  host: notifications.64v.ru
   path: /
   pathType: Prefix
   tls:
     enabled: true
-    secretName: notification-64v-ru-tls
+    secretName: notifications-64v-ru-tls
 
 resources: {}
 nodeSelector: {}
