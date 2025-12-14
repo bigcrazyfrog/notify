@@ -54,7 +54,7 @@ spec:
             gateway:  [ context: 'src/NotifySystem.Gateway',  dockerfile: 'src/NotifySystem/NotifySystem.Gateway/Dockerfile',  image: "${env.REGISTRY}/notify-gateway" ],
             email:    [ context: 'src/NotifySystem.Email',    dockerfile: 'src/NotifySystem/Services/EmailService/EmailService/Dockerfile',    image: "${env.REGISTRY}/notify-email" ],
             push:     [ context: 'src/NotifySystem.Push',     dockerfile: 'src/NotifySystem/Services/PushService/PushService/Dockerfile',     image: "${env.REGISTRY}/notify-push" ],
-            # TODO telegram
+            // TODO telegram
           ]
 
           if (!cfg.containsKey(params.SERVICE)) {
