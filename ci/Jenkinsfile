@@ -34,10 +34,10 @@ spec:
     string(name: 'TAG', defaultValue: '', description: 'Тег образа (пусто = BUILD_NUMBER)')
     booleanParam(name: 'PUSH_LATEST', defaultValue: true, description: 'Пушить ли :latest')
   }
-
-  environment {
-    // Можно оставить пустым, а вычислять через script
-  }
+//
+//   environment {
+//     // Можно оставить пустым, а вычислять через script
+//   }
 
   stages {
     stage('Checkout') {
