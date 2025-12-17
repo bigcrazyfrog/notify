@@ -31,4 +31,5 @@ env: []
 envFrom:
   secrets:
     - notify-system-db
+    - notify-rabbitmq-env
   configMaps: []
