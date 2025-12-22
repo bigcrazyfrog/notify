@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: frogfrog243/notify-email
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  enabled: false
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+env:
+  - name: Serilog__WriteTo__0__Name
+    value: Console
+  - name: Serilog__WriteTo__1__Name
+    value: File
+  - name: Serilog__WriteTo__1__Args__path
+    value: /logs/email-service-.log
+  - name: Serilog__WriteTo__1__Args__rollingInterval
+    value: Day
+envFrom:
+  secrets:
+    - notify-system-db
+    - notify-rabbitmq-env
+    - notify-email-settings
+  configMaps: []
