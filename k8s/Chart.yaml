@@ -12,3 +12,6 @@ dependencies:
   - name: push
     version: 0.1.0
     repository: "file://push"
+  - name: email
+    version: 0.1.0
+    repository: "file://email"
