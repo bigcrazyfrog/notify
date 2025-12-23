@@ -1,0 +1,34 @@
+replicaCount: 1
+
+image:
+  repository: frogfrog243/notify-push
+  tag: "latest"
+  pullPolicy: Always
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+firebase:
+  serviceAccountSecretName: firebase-service-account
+  serviceAccountKey: firebase-service-account.json
+  serviceAccountFilePath: /secrets/firebase/firebase-service-account.json
+
+env:
+  - name: Serilog__WriteTo__0__Name
+    value: Console
+  - name: Serilog__WriteTo__1__Name
+    value: File
+  - name: Serilog__WriteTo__1__Args__path
+    value: /logs/push-service-.log
+  - name: Serilog__WriteTo__1__Args__rollingInterval
+    value: Day
+  - name: PushSettings__Fcm__ServiceAccountKeyPath
+    value: /secrets/firebase/firebase-service-account.json
+envFrom:
+  secrets:
+    - notify-system-db
+    - notify-rabbitmq-env
+    - notify-push-settings
+  configMaps: []
